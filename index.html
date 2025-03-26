@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JWT Аутентификация</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="auth-forms">
+            <div class="form-container" id="registerForm">
+                <h2>Регистрация</h2>
+                <form onsubmit="handleRegister(event)">
+                    <input type="text" id="registerUsername" placeholder="Имя пользователя" required>
+                    <input type="password" id="registerPassword" placeholder="Пароль" required>
+                    <button type="submit">Зарегистрироваться</button>
+                </form>
+                <p>Уже есть аккаунт? <a href="#" onclick="toggleForms()">Войти</a></p>
+            </div>
+
+            <div class="form-container" id="loginForm" style="display: none;">
+                <h2>Вход</h2>
+                <form onsubmit="handleLogin(event)">
+                    <input type="text" id="loginUsername" placeholder="Имя пользователя" required>
+                    <input type="password" id="loginPassword" placeholder="Пароль" required>
+                    <button type="submit">Войти</button>
+                </form>
+                <p>Нет аккаунта? <a href="#" onclick="toggleForms()">Зарегистрироваться</a></p>
+            </div>
+        </div>
+
+        <div class="protected-content" id="protectedContent" style="display: none;">
+            <h2>Защищенный контент</h2>
+            <p id="userInfo"></p>
+            <button onclick="fetchProtectedData()">Получить данные</button>
+            <div id="protectedData"></div>
+            <button onclick="logout()">Выйти</button>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html> 
