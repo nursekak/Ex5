@@ -2,6 +2,7 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const bodyParser = require('body-parser');
 const cors = require('cors');
+const path = require('path');
 
 const app = express();
 const port = 3000;
@@ -9,6 +10,7 @@ const secretKey = 'your_secret_key'; // Замените на более сло�
 
 app.use(cors());
 app.use(bodyParser.json());
+app.use(express.static(path.join(__dirname)));
 
 let users = []; // Массив для хранения пользователей
 
@@ -47,6 +49,11 @@ const authenticateToken = (req, res, next) => {
 // Защищенный маршрут
 app.get('/protected', authenticateToken, (req, res) => {
     res.json({ message: 'Это защищенные данные', user: req.user });
+});
+
+// Корневой маршрут
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 app.listen(port, () => {
