@@ -4,40 +4,209 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>JWT Аутентификация</title>
-    <link rel="stylesheet" href="styles.css">
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --error-color: #e74c3c;
+            --success-color: #2ecc71;
+            --background-color: #f5f6fa;
+            --card-background: #ffffff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--background-color);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .card {
+            background: var(--card-background);
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: 2rem;
+            grid-column: 1 / -1;
+        }
+
+        h2 {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        input {
+            width: 100%;
+            padding: 0.8rem;
+            margin-bottom: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        button {
+            width: 100%;
+            padding: 0.8rem;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #357abd;
+        }
+
+        .message {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 5px;
+            display: none;
+        }
+
+        .success {
+            background-color: var(--success-color);
+            color: white;
+        }
+
+        .error {
+            background-color: var(--error-color);
+            color: white;
+        }
+
+        .protected-data {
+            margin-top: 1rem;
+            padding: 1rem;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            display: none;
+        }
+    </style>
 </head>
 <body>
+    <h1>JWT Аутентификация</h1>
     <div class="container">
-        <div class="auth-forms">
-            <div class="form-container" id="registerForm">
-                <h2>Регистрация</h2>
-                <form onsubmit="handleRegister(event)">
-                    <input type="text" id="registerUsername" placeholder="Имя пользователя" required>
-                    <input type="password" id="registerPassword" placeholder="Пароль" required>
-                    <button type="submit">Зарегистрироваться</button>
-                </form>
-                <p>Уже есть аккаунт? <a href="#" onclick="toggleForms()">Войти</a></p>
+        <div class="card">
+            <h2>Регистрация</h2>
+            <div class="form-group">
+                <input id="reg-username" placeholder="Имя пользователя">
+                <input id="reg-password" type="password" placeholder="Пароль">
+                <button onclick="register()">Зарегистрироваться</button>
             </div>
-
-            <div class="form-container" id="loginForm" style="display: none;">
-                <h2>Вход</h2>
-                <form onsubmit="handleLogin(event)">
-                    <input type="text" id="loginUsername" placeholder="Имя пользователя" required>
-                    <input type="password" id="loginPassword" placeholder="Пароль" required>
-                    <button type="submit">Войти</button>
-                </form>
-                <p>Нет аккаунта? <a href="#" onclick="toggleForms()">Зарегистрироваться</a></p>
-            </div>
+            <div id="reg-message" class="message"></div>
         </div>
 
-        <div class="protected-content" id="protectedContent" style="display: none;">
-            <h2>Защищенный контент</h2>
-            <p id="userInfo"></p>
-            <button onclick="fetchProtectedData()">Получить данные</button>
-            <div id="protectedData"></div>
-            <button onclick="logout()">Выйти</button>
+        <div class="card">
+            <h2>Вход</h2>
+            <div class="form-group">
+                <input id="login-username" placeholder="Имя пользователя">
+                <input id="login-password" type="password" placeholder="Пароль">
+                <button onclick="login()">Войти</button>
+            </div>
+            <div id="login-message" class="message"></div>
+        </div>
+
+        <div class="card">
+            <h2>Защищенные данные</h2>
+            <div class="form-group">
+                <button onclick="accessProtected()">Получить данные</button>
+            </div>
+            <div id="protected-data" class="protected-data"></div>
         </div>
     </div>
-    <script src="script.js"></script>
+
+    <script>
+        function showMessage(elementId, message, isError = false) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.style.display = 'block';
+            element.className = `message ${isError ? 'error' : 'success'}`;
+            setTimeout(() => {
+                element.style.display = 'none';
+            }, 3000);
+        }
+
+        async function register() {
+            const username = document.getElementById('reg-username').value;
+            const password = document.getElementById('reg-password').value;
+            try {
+                const response = await fetch('http://localhost:3000/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password }),
+                });
+                const data = await response.json();
+                showMessage('reg-message', data.message || data.error, !data.message);
+            } catch (error) {
+                showMessage('reg-message', 'Ошибка при регистрации', true);
+            }
+        }
+
+        async function login() {
+            const username = document.getElementById('login-username').value;
+            const password = document.getElementById('login-password').value;
+            try {
+                const response = await fetch('http://localhost:3000/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password }),
+                });
+                const data = await response.json();
+                if (data.token) {
+                    localStorage.setItem('token', data.token);
+                    showMessage('login-message', 'Вход выполнен успешно');
+                } else {
+                    showMessage('login-message', data.error, true);
+                }
+            } catch (error) {
+                showMessage('login-message', 'Ошибка при входе', true);
+            }
+        }
+
+        async function accessProtected() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                showMessage('protected-data', 'Необходимо войти в систему', true);
+                return;
+            }
+            try {
+                const response = await fetch('http://localhost:3000/protected', {
+                    method: 'GET',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                });
+                const data = await response.json();
+                const protectedData = document.getElementById('protected-data');
+                protectedData.style.display = 'block';
+                protectedData.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+            } catch (error) {
+                showMessage('protected-data', 'Ошибка при получении данных', true);
+            }
+        }
+    </script>
 </body>
-</html> 
+</html>
